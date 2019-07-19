@@ -28,7 +28,7 @@ serijas_dic={'103.':'67',#Here you can specify the aparment series which interes
             'Specpr.':'78',
             'Staļina':'75',
             'Jaun.':'3596'}
-path="/home/mix/Desktop/Python_programming/py/55.lv/"
+path="/path/to/script/directory"
 driver=webdriver.Chrome()
 flat_list=open(path+'flats.txt', 'r')
 hrefs = []
