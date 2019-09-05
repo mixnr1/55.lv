@@ -1,3 +1,4 @@
+import csv
 import time
 import requests
 from lxml import html
@@ -5,22 +6,23 @@ import config
 start = time.time()
 start_tuple=time.localtime()
 start_time = time.strftime("%Y-%m-%d %H:%M:%S", start_tuple)
-# darijumu_veids={'Izīrē':'hand_over/',
-#                 'Īrē':'remove/',
-#                 'Maina':'change/',
-#                 'Dažādi':'other/'}
+darijumu_veids={'Izire':'hand_over/',
+                'Ire':'remove/',
+                'Pardod':'sell/',
+                'Maina':'change/',
+                'Dazadi':'other/'}
+date = time.strftime('%d%m%Y')
 path=config.path
 flat_list=open(path+'flats.txt', 'r')
-     
-def parser(elemt):
-        regions=elemt[:elemt.find("/sell/")].replace('https://www.ss.com/lv/real-estate/flats/','')
+def parser(elemt, tips):
+        regions=elemt[:elemt.find("/"+tips)].replace('https://www.ss.com/lv/real-estate/flats/','')
         all_lines=[]
         page = requests.get(elemt, proxies=config.proxies, allow_redirects=False)
         soup=html.fromstring(page.content)
         tr_elements = soup.xpath('//tr')
         for T in tr_elements:
-                if len(T)==10:#izpildas ja kolonnu skais tabula ir precizi desmit
-                        line=[(regions)]#sakam ar regionu
+                if len(T)==10:
+                        line=[(regions)]
                         for j in T.iterchildren():
                                 data=j.text_content()
                                 if len(data)>0:
@@ -29,27 +31,25 @@ def parser(elemt):
                                         except:
                                                 pass
                         all_lines.append(line)
-        file_text=open(path+"test.txt",'a')
-        # test=[]
         for ele in all_lines:
                 st=[]
-                for i in range(0, len(ele)):#no nulles nesakam lai izlaistu pirmo kolonnu
+                for i in range(0, len(ele)):
                         if i==1:
                                 pass
                         else:
                                 st.append(ele[i])
-                line=','.join(st)
-                file_text.write(line + '\n')
-                # test.append(line)
-        # print(test)
-        file_text.close()
+                line='|'.join(st)
+                with open('ss_sell_static_'+date+'.csv', mode='a') as csv_file:#file name must be specified
+                        csv_file.write(line)
+                        csv_file.write('\n')
 for elemt in flat_list:
-        parser(elemt) 
+        site=''.join([elemt.rstrip(), darijumu_veids['Pardod']])#section must be specified
+        parser(site, darijumu_veids['Pardod']) #section must be specified
         for i in range(2, 30):
-                page=''.join([elemt.rstrip(), 'page', str(i), '.html'])                            
-                response = requests.get(page, proxies=config.proxies, allow_redirects=False)#What to do if doesn't exist
+                page=''.join([site, 'page', str(i), '.html'])                         
+                response = requests.get(page, proxies=config.proxies, allow_redirects=False)
                 if response.status_code == 200:
-                        parser(page)
+                        parser(page, darijumu_veids['Pardod']) #section must be specified
                 elif response.status_code == 302:
                         pass
                 elif response.status_code == 404:
