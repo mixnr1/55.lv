@@ -10,6 +10,8 @@ from email.mime.multipart import MIMEMultipart
 from selenium import webdriver
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+
 start = time.time()
 start_tuple=time.localtime()
 start_time = time.strftime("%Y-%m-%d %H:%M:%S", start_tuple)
@@ -21,15 +23,17 @@ serijas_dic={'103.':'67',#Here you can specify the aparment series which interes
             #'104.':'68',
             #'467.':'70',
             #'Čehu pr.':'73',
-            #'Hrušč.':'76',
+            # 'Hrušč.':'76',
             #'LT proj.':'72',
             #'M. ģim.':'74',
             'Renov.':'3616',
             'Specpr.':'78',
             'Staļina':'75',
             'Jaun.':'3596'}
-path="/path/to/script/directory"
-driver=webdriver.Chrome()
+path=config.path
+options = FirefoxOptions()
+options.add_argument("--headless")
+driver = webdriver.Firefox(options=options, executable_path=config.driver_path)
 flat_list=open(path+'flats.txt', 'r')
 hrefs = []
 for elemt in flat_list:
@@ -37,7 +41,7 @@ for elemt in flat_list:
     min_cena=driver.find_element_by_id('f_o_8_min')
     max_cena=driver.find_element_by_id('f_o_8_max')
     min_cena.send_keys('30000')#Here you can set the starting price. If not needed comment out this line.
-    max_cena.send_keys('65000')#Here you can set the max price. If not needed comment out this line.
+    max_cena.send_keys('75000')#Here you can set the max price. If not needed comment out this line.
     min_platiba=driver.find_element_by_id('f_o_3_min')
     max_platiba=driver.find_element_by_id('f_o_3_max')
     min_platiba.send_keys('50')#Here you can set min area in square meters. If not needed comment out this line.
@@ -83,6 +87,7 @@ if len(diff) > 0:
     file_text.close()
 driver.close()
 flat_list.close()
+
 while True:
     if len(diff)==0:
         break
@@ -105,7 +110,7 @@ while True:
         password = config.password
         message = MIMEMultipart("alternative")
         timestr = time.strftime("%d.%m.%Y-%H:%M:%S")
-        message["Subject"] = "SS_flats "+timestr 
+        message["Subject"] = "SLUDINĀJUMI "+timestr 
         message["From"] = sender_email
         message["To"] = receiver_email
         epasta_saturs="\n".join([(str(i).replace('\n', '')) for i in diff])
@@ -138,6 +143,7 @@ while True:
                 sender_email, receiver_email, message.as_string()
             )
         break
+
 end = time.time()
 end_tuple = time.localtime()
 end_time = time.strftime("%Y-%m-%d %H:%M:%S", end_tuple)
