@@ -11,19 +11,22 @@ darijumu_veids={'Izire':'hand_over/',
                 'Pardod':'sell/',
                 'Maina':'change/',
                 'Dazadi':'other/'}
-date = time.strftime('%d%m%Y')
+date = time.strftime('%d.%m.%Y.')
 path=config.path
 flat_list=open(path+'flats.txt', 'r')
 def parser(elemt, tips):
         regions=elemt[:elemt.find("/"+tips)].replace('https://www.ss.com/lv/real-estate/flats/','')
         all_lines=[]
-        page = requests.get(elemt, proxies=config.proxies, allow_redirects=False)
+        # page = requests.get(elemt, proxies=config.proxies, allow_redirects=False)
+        page = requests.get(elemt, allow_redirects=False)
         soup=html.fromstring(page.content)
         tr_elements = soup.xpath('//tr')
         for T in tr_elements:
                 if len(T)==10:
                         line=[(regions)]
                         for j in T.iterchildren():
+                                if j.find('a') is not None:
+                                        line.append("https://www.ss.com"+(j.find('a').get('href')))
                                 data=j.text_content()
                                 if len(data)>0:
                                         try:
@@ -34,20 +37,23 @@ def parser(elemt, tips):
         for ele in all_lines:
                 st=[]
                 for i in range(0, len(ele)):
-                        if i==1:
+                        if i==2:
                                 pass
+                        elif i==8 or i==9:
+                                st.append(ele[i].replace('€','').replace(',','').replace(' ',''))
                         else:
                                 st.append(ele[i])
                 line='|'.join(st)
-                with open('ss_sell_static_'+date+'.csv', mode='a') as csv_file:#file name must be specified
-                        csv_file.write(line)
+                with open('ss_sell_static.csv', mode='a') as csv_file:#file name must be specified
+                        csv_file.write(line+'|'+date)
                         csv_file.write('\n')
 for elemt in flat_list:
         site=''.join([elemt.rstrip(), darijumu_veids['Pardod']])#section must be specified
         parser(site, darijumu_veids['Pardod']) #section must be specified
         for i in range(2, 30):
-                page=''.join([site, 'page', str(i), '.html'])                         
-                response = requests.get(page, proxies=config.proxies, allow_redirects=False)
+                page=''.join([site, 'page', str(i), '.html'])     
+                response = requests.get(page, allow_redirects=False)                    
+                # response = requests.get(page, proxies=config.proxies, allow_redirects=False)
                 if response.status_code == 200:
                         parser(page, darijumu_veids['Pardod']) #section must be specified
                 elif response.status_code == 302:
